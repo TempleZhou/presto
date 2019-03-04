@@ -35,6 +35,15 @@ public class ElasticsearchConnectorConfig
     private Duration requestTimeout = new Duration(100, MILLISECONDS);
     private int maxRequestRetries = 5;
     private Duration maxRetryTime = new Duration(10, SECONDS);
+    private String certificateFormat = "";
+    private File pemcertFilepath = new File("etc/elasticsearch/esnode.pem");
+    private File pemkeyFilepath = new File("etc/elasticsearch/esnode-key.pem");
+    private String pemkeyPassword = "";
+    private File pemtrustedcasFilepath = new File("etc/elasticsearch/root-ca.pem");
+    private File keystoreFilepath = new File("etc/elasticsearch/keystore.jks");
+    private String keystorePassword = "";
+    private File truststoreFilepath = new File("etc/elasticsearch/truststore.jks");
+    private String truststorePassword = "";
 
     @NotNull
     public File getTableDescriptionDirectory()
@@ -148,5 +157,122 @@ public class ElasticsearchConnectorConfig
     {
         this.maxRetryTime = maxRetryTime;
         return this;
+    }
+
+    @NotNull
+    public String getCertificateFormat()
+    {
+        return certificateFormat;
+    }
+
+    @Config("searchguard.ssl.transport.certificate_format")
+    @ConfigDescription("Certificate format")
+    public void setCertificateFormat(String certificateFormat)
+    {
+        this.certificateFormat = certificateFormat;
+    }
+
+    @NotNull
+    public File getPemcertFilepath()
+    {
+        return pemcertFilepath;
+    }
+
+    @Config("searchguard.ssl.transport.pemcert_filepath")
+    @ConfigDescription("Path to the X.509 node certificate chain")
+    public void setPemcertFilepath(File pemcertFilepath)
+    {
+        this.pemcertFilepath = pemcertFilepath;
+    }
+
+    @NotNull
+    public File getPemkeyFilepath()
+    {
+        return pemkeyFilepath;
+    }
+
+    @Config("searchguard.ssl.transport.pemkey_filepath")
+    @ConfigDescription("Path to the certificates key file")
+    public void setPemkeyFilepath(File pemkeyFilepath)
+    {
+        this.pemkeyFilepath = pemkeyFilepath;
+    }
+
+    @NotNull
+    public String getPemkeyPassword()
+    {
+        return pemkeyPassword;
+    }
+
+    @Config("searchguard.ssl.transport.pemkey_password")
+    @ConfigDescription("Key password. Omit this setting if the key has no password.")
+    public void setPemkeyPassword(String pemkeyPassword)
+    {
+        this.pemkeyPassword = pemkeyPassword;
+    }
+
+    @NotNull
+    public File getPemtrustedcasFilepath()
+    {
+        return pemtrustedcasFilepath;
+    }
+
+    @Config("searchguard.ssl.transport.pemtrustedcas_filepath")
+    @ConfigDescription("Path to the root CA(s) (PEM format)")
+    public void setPemtrustedcasFilepath(File pemtrustedcasFilepath)
+    {
+        this.pemtrustedcasFilepath = pemtrustedcasFilepath;
+    }
+
+    @NotNull
+    public File getKeystoreFilepath()
+    {
+        return keystoreFilepath;
+    }
+
+    @Config("searchguard.ssl.transport.keystore_filepath")
+    @ConfigDescription("Path to the keystore file")
+    public void setKeystoreFilepath(File keystoreFilepath)
+    {
+        this.keystoreFilepath = keystoreFilepath;
+    }
+
+    @NotNull
+    public String getKeystorePassword()
+    {
+        return keystorePassword;
+    }
+
+    @Config("searchguard.ssl.transport.keystore_password")
+    @ConfigDescription("Keystore password")
+    public void setKeystorePassword(String keystorePassword)
+    {
+        this.keystorePassword = keystorePassword;
+    }
+
+    @NotNull
+    public File getTruststoreFilepath()
+    {
+        return truststoreFilepath;
+    }
+
+    @Config("searchguard.ssl.transport.truststore_filepath")
+    @ConfigDescription("Path to the truststore file")
+    public void setTruststoreFilepath(File truststoreFilepath)
+    {
+        this.truststoreFilepath = truststoreFilepath;
+    }
+
+    @NotNull
+    public String getTruststorePassword()
+    {
+        return truststorePassword;
+    }
+
+    @Config("searchguard.ssl.transport.truststore_password")
+    @ConfigDescription("Truststore password")
+    public void setTruststorePassword(String truststorePassword)
+    {
+        this.truststorePassword = truststorePassword;
     }
 }

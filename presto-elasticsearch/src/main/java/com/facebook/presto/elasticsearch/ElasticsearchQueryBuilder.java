@@ -19,6 +19,8 @@ import com.facebook.presto.spi.predicate.Domain;
 import com.facebook.presto.spi.predicate.Range;
 import com.facebook.presto.spi.predicate.TupleDomain;
 import com.facebook.presto.spi.type.Type;
+import com.floragunn.searchguard.ssl.SearchGuardSSLPlugin;
+import com.floragunn.searchguard.ssl.util.SSLConfigConstants;
 import io.airlift.log.Logger;
 import io.airlift.slice.Slice;
 import io.airlift.units.Duration;
@@ -82,16 +84,46 @@ public class ElasticsearchQueryBuilder
         index = split.getIndex();
         shard = split.getShard();
         type = split.getType();
-        Settings settings = Settings.builder()
-                .put("client.transport.ignore_cluster_name", true)
-                .build();
+        Settings settings;
+        InetAddress address;
         try {
-            InetAddress address = InetAddress.getByName(split.getSearchNode());
-            client = new PreBuiltTransportClient(settings)
-                    .addTransportAddress(new TransportAddress(address, split.getPort()));
+            address = InetAddress.getByName(split.getSearchNode());
         }
         catch (UnknownHostException e) {
             throw new PrestoException(ELASTICSEARCH_CONNECTION_ERROR, format("Error connecting to search node (%s:%d)", split.getSearchNode(), split.getPort()), e);
+        }
+        switch (config.getCertificateFormat().toUpperCase()) {
+            case "PEM":
+                settings = Settings.builder()
+                        .put("client.transport.ignore_cluster_name", true)
+                        .put(SSLConfigConstants.SEARCHGUARD_SSL_TRANSPORT_PEMCERT_FILEPATH, config.getPemcertFilepath())
+                        .put(SSLConfigConstants.SEARCHGUARD_SSL_TRANSPORT_PEMKEY_FILEPATH, config.getPemkeyFilepath())
+                        .put(SSLConfigConstants.SEARCHGUARD_SSL_TRANSPORT_PEMKEY_PASSWORD, config.getPemkeyPassword())
+                        .put(SSLConfigConstants.SEARCHGUARD_SSL_TRANSPORT_PEMTRUSTEDCAS_FILEPATH, config.getPemtrustedcasFilepath())
+                        .put(SSLConfigConstants.SEARCHGUARD_SSL_TRANSPORT_ENFORCE_HOSTNAME_VERIFICATION, false)
+                        .build();
+                client = new PreBuiltTransportClient(settings, SearchGuardSSLPlugin.class)
+                        .addTransportAddress(new TransportAddress(address, split.getPort()));
+                break;
+            case "JKS":
+                settings = Settings.builder()
+                        .put("client.transport.ignore_cluster_name", true)
+                        .put(SSLConfigConstants.SEARCHGUARD_SSL_TRANSPORT_KEYSTORE_FILEPATH, config.getKeystoreFilepath())
+                        .put(SSLConfigConstants.SEARCHGUARD_SSL_TRANSPORT_TRUSTSTORE_FILEPATH, config.getTruststoreFilepath())
+                        .put(SSLConfigConstants.SEARCHGUARD_SSL_TRANSPORT_KEYSTORE_PASSWORD, config.getKeystorePassword())
+                        .put(SSLConfigConstants.SEARCHGUARD_SSL_TRANSPORT_TRUSTSTORE_PASSWORD, config.getTruststorePassword())
+                        .put(SSLConfigConstants.SEARCHGUARD_SSL_TRANSPORT_ENFORCE_HOSTNAME_VERIFICATION, false)
+                        .build();
+                client = new PreBuiltTransportClient(settings, SearchGuardSSLPlugin.class)
+                        .addTransportAddress(new TransportAddress(address, split.getPort()));
+                break;
+            default:
+                settings = Settings.builder()
+                        .put("client.transport.ignore_cluster_name", true)
+                        .build();
+                client = new PreBuiltTransportClient(settings)
+                        .addTransportAddress(new TransportAddress(address, split.getPort()));
+                break;
         }
         scrollTimeout = config.getScrollTimeout();
         scrollSize = config.getScrollSize();
